@@ -454,7 +454,11 @@ def read_translation_csv(csv_path: str, ignore_duplicates: bool = False, allow_e
                         raise e
                 if use_combined_key:
                     _combined_key = row[column_indices["CombinedKey"]]
-                    namespace, key = _combined_key.split(":", 1)
+                    try:
+                        namespace, key = _combined_key.split(":", 1)
+                    except ValueError:
+                        raise ValueError(
+                            f"Invalid CombinedKey format in {csv_path}:{row_num}: {_combined_key}")
                 else:
                     namespace = row[column_indices["Namespace"]]
                     key = row[column_indices["Key"]]
