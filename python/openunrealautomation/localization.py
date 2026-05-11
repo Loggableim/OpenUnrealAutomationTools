@@ -540,6 +540,7 @@ def import_csv_translations(target_language, target,
                             translation_csvs: List[str],
                             translation_override_csvs: List[str] = [],
                             keep_translation_if_source_changed: bool = True,
+                            keep_translation_if_source_missing: bool = False,
                             verbose_diff: bool = False) -> Dict[str, CSVEntryWithMetaData]:
     """
     Reads a number of translation files into the new_lines_dict translated_strings properties.
@@ -561,7 +562,7 @@ def import_csv_translations(target_language, target,
         raw_overrides = read_translation_csv(override_csv,
                                              ignore_duplicates=True)
         for override_key, override_value in raw_overrides.items():
-            if override_key in new_lines_dict:
+            if keep_translation_if_source_missing or override_key in new_lines_dict:
                 overrides[override_key] = override_value
 
     translation_csvs = list(filter(os.path.exists, translation_csvs))
@@ -592,8 +593,9 @@ def import_csv_translations(target_language, target,
         last_translated_lines.update(overrides)
 
         only_in_translation = last_translated_lines.keys() - new_lines_dict.keys()
-        for key in only_in_translation:
-            last_translated_lines.pop(key)
+        if not keep_translation_if_source_missing:
+            for key in only_in_translation:
+                last_translated_lines.pop(key)
 
         # do NOT track stats of lines here - the diff will be done later
         for combined_key, new_line in new_lines_dict.items():
@@ -625,6 +627,7 @@ def import_csv_translations(target_language, target,
             csv_suffix = ""
         print(
             f"  untranslated:  {len(untranslated)}{csv_suffix}")
+        print(f"  only transl.:  {len(only_in_translation)}")
 
     return last_translated_lines
 
